@@ -442,8 +442,11 @@ class Akinator(KnowledgeEngine):
 # Personajes posibles y bienvenida al jugador 
 print("Bienvenido a adivinaTron puedo adivinar cualquier superheroe/villano que este pensando")
 
+idx = 1
 for i in dict_personajes:
-    print(i)
+    print(f"{idx}. {i}")
+    idx+=1
+    
 # Se instancia el motor de reglas
 engine = Akinator()
 engine.reset()
