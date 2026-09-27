@@ -110,18 +110,19 @@ preguntas_akinator=["¿Tú personaje es archienemigo de algún personaje de la l
 
 clases_dic= {}
 propiedades_dic={}
+preguntas_procesadas=set()
 
 # Este ciclo for recorre la union de ambos sets y asocia las propiedades/clase a su pregunta correspondiente 
-for elemento in clase.union(propiedad):
+for elemento in sorted(clase.union(propiedad),key=len,reverse=True): #agregue esto para que Humano no tuviera conflicto con otras preguntas 
     if elemento == 'Personaje': continue
     elemento_comparacion = elemento.lower()
     for pregunta in preguntas_akinator:
         pregunta_comparacion = normalize(pregunta)
+        if pregunta in preguntas_procesadas: continue
         if elemento_comparacion in pregunta_comparacion:
-            
+            preguntas_procesadas.add(pregunta)
             if elemento in clase :clases_dic[elemento] = {"uri":elemento, "pregunta":pregunta}
             else: propiedades_dic[elemento]={"uri":elemento, "pregunta":pregunta}
-
 
 
 # Clases de Hechos
@@ -185,13 +186,17 @@ class Akinator(KnowledgeEngine):
         self.declare(AtributoEvaluado(nombre=attr))
         self.retract(r)
         candidatos_restantes = [fact for fact in self.facts.values() if isinstance(fact, Personaje)]
-        print(len(candidatos_restantes))
+        for i in candidatos_restantes:
+            print(i.items())
         if len(candidatos_restantes) <= 2:
             self.retract(e)
             self.declare(EstadoJuego(fase="final", candidatos=candidatos_restantes))
             
 
-    
+    # Dependiendo de la cantidad de los personajes restantes despues de la ronda de preguntas, el sistema tomara distintos caminos:
+    # -Si solo queda un personaje el sistema lo imprimirá en pantalla automáticamente y el juego se dará por terminado 
+    # -Si no queda ningún personaje en la lista se imprimirá en pantalla que no pudo adivinar el personaje
+    # -Si quedan 2 personajes entrar en fase de desempate utilizando el sistema difuso para desempatar 
     @Rule(EstadoJuego(fase="final", candidatos=MATCH.candidatos_restantes),
           
            NOT(EstadoJuego(fase="desempate")),
@@ -207,10 +212,53 @@ class Akinator(KnowledgeEngine):
         elif len(candidatos_restantes) == 2:
              print(f"\nQuedan {len(candidatos_restantes)} candidatos. Activando lógica difusa...")
              self.declare(EstadoJuego(fase="desempate", candidatos=candidatos_restantes))
-    
+             print(candidatos_restantes[0]["uri"])
+             print(candidatos_restantes[1]["uri"
+             ])
+
     @Rule(EstadoJuego(fase="desempate", candidatos=MATCH.candidatos_restantes))
-    def desempate(self):
-         pass
+    def desempate(self,candidatos_restantes):
+      try:
+          print("0-35: Débil (Humanos un poquito más poderosos)\n25-70: Medio poderoso (Armas avanzadas y sobrehumanos) \n60-100: Poderoso (Universal)")
+          v_pod = float(input("¿Nivel de PODER (0 a 100)?: \n"))
+
+          print("\nPiense en amenaza como, si el personaje fuera(o es) malo , que tanta magnitud destruiría")
+          print("0-3: Baja (Amenaza ciudades)\n3-7: Media (Amenaza el mundo)\n7-10: Alta (Amenaza el universo)")
+          v_ame = float(input("¿Nivel de AMENAZA (0 a 10)?: \n"))
+
+
+          print("\n0-30: Poco Popular \n30-70: Medio conocido \n70-100: ícono, muy conocido")
+          v_pop = float(input("¿Nivel de POPULARIDAD (0 a 100)?: \n"))
+
+
+          
+          # Se llama a la función evaluar_perfil_difuso y toma como parametros los valores ingresados por el usuario
+          impacto_esperado = evaluar_perfil_difuso(v_pod, v_ame, v_pop)
+          mejor_candidato = None
+          menor_dif = float('inf')
+
+          for cand in candidatos_restantes:
+              # Extraemos los valores del Fact de Experta
+              impacto_cand = evaluar_perfil_difuso(
+                  cand['valorPoder'],
+                  cand['valorAmenaza'],
+                  cand['valorPopularidad']
+              )
+
+              # El personaje que tenga la menor diferencia de impacto es el ganador
+              if abs(impacto_esperado - impacto_cand) < menor_dif:
+                  menor_dif = abs(impacto_esperado - impacto_cand)
+                  mejor_candidato = cand
+
+          if mejor_candidato:
+              print(f"\nLa Lógica Difusa desempató a favor de: {mejor_candidato['uri'].upper()}\n")
+
+      except ValueError:
+          print("\nEntrada inválida. Ingresa solo números.")
+
+
+
+
 
     # REGLAS DE DESCARTE (Salience 10 - Se ejecutan antes de limpiar)
 
@@ -391,6 +439,11 @@ class Akinator(KnowledgeEngine):
     def desc_si_identidad(self, c): 
         self.retract(c)
 
+# Personajes posibles y bienvenida al jugador 
+print("Bienvenido a adivinaTron puedo adivinar cualquier superheroe/villano que este pensando")
+
+for i in dict_personajes:
+    print(i)
 # Se instancia el motor de reglas
 engine = Akinator()
 engine.reset()
@@ -409,65 +462,11 @@ random.shuffle(hechos_iniciales)
 
 for hecho in hechos_iniciales:
     engine.declare(hecho)
-print(len(engine.facts))
+
+
 engine.declare(EstadoJuego(fase="descarte"))
 engine.run()
-"""
-# Dependiendo de la cantidad de los personajes restantes despues de la ronda de preguntas, el sistema tomara distintos caminos:
-# -Si solo queda un personaje el sistema lo imprimirá en pantalla automáticamente y el juego se dará por terminado 
-# -Si no queda ningún personaje en la lista se imprimirá en pantalla que no pudo adivinar el personaje
-# -Si quedan 2 personajes entrar en fase de desempate utilizando el sistema difuso para desempatar 
-if len(candidatos_restantes) == 1:
-    cand = candidatos_restantes[0]
-    print(f"\nEl motor determinó que es: {cand['uri'].upper()}")
-
-elif len(candidatos_restantes) == 0:
-    print("\nNo se encontró un personaje con estos atributos ")
-
-elif len(candidatos_restantes) == 2:
-    print(f"\nQuedan {len(candidatos_restantes)} candidatos. Activando lógica difusa...")
-
-    try:
-        print("0-35: Débil (Humanos un poquito más poderosos)\n25-70: Medio poderoso (Armas avanzadas y sobrehumanos) \n60-100: Poderoso (Universal)")
-        v_pod = float(input("¿Nivel de PODER (0 a 100)?: \n"))
-
-        print("\nPiense en amenaza como, si el personaje fuera(o es) malo , que tanta magnitud destruiría")
-        print("0-3: Baja (Amenaza ciudades)\n3-7: Media (Amenaza el mundo)\n7-10: Alta (Amenaza el universo)")
-        v_ame = float(input("¿Nivel de AMENAZA (0 a 10)?: \n"))
 
 
-        print("\n0-30: Poco Popular \n30-70: Medio conocido \n70-100: ícono, muy conocido")
-        v_pop = float(input("¿Nivel de POPULARIDAD (0 a 100)?: \n"))
 
 
-        # Disparamos los hechos en el motor para cumplir con el uso de PerfilDifuso
-        engine.declare(EstadoJuego(fase="desempate"))
-        engine.declare(PerfilDifuso(poder=v_pod, amenaza=v_ame, popularidad=v_pop))
-        engine.run()
-
-        # Se llama a la función evaluar_perfil_difuso y toma como parametros los valores ingresados por el usuario
-        impacto_esperado = evaluar_perfil_difuso(v_pod, v_ame, v_pop)
-        mejor_candidato = None
-        menor_dif = float('inf')
-
-        for cand in candidatos_restantes:
-            # Extraemos los valores del Fact de Experta
-            impacto_cand = evaluar_perfil_difuso(
-                cand['valorPoder'],
-                cand['valorAmenaza'],
-                cand['valorPopularidad']
-            )
-
-            # El personaje que tenga la menor diferencia de impacto es el ganador
-            if abs(impacto_esperado - impacto_cand) < menor_dif:
-                menor_dif = abs(impacto_esperado - impacto_cand)
-                mejor_candidato = cand
-
-        if mejor_candidato:
-            print(f"\nLa Lógica Difusa desempató a favor de: {mejor_candidato['uri'].upper()}\n")
-
-    except ValueError:
-        print("\nEntrada inválida. Ingresa solo números.")
-"""
-
-print()
