@@ -57,17 +57,25 @@ g.add((EX.Alienigena, RDFS.subClassOf, EX.Personaje))
 props = [
     (FOAF.name, EX.Personaje, XSD.string, "Nombre Real", "Nombre civil o de identidad real (Vocabulario FOAF)."),
     (EX.tienePoder, EX.Personaje, EX.Superpoder, "Tiene Poder", "Relaciona un personaje con su habilidad innata."),
-    (EX.poseeArtefacto, EX.Personaje, EX.Equipamiento, "Posee Artefacto", "Relaciona un personaje con su equipamiento."),
-    (EX.poseeArmaMitica, EX.Personaje, EX.Equipamiento, "Posee Arma Mítica", "Subpropiedad para armas divinas/míticas."),#
+    (EX.poseeArtefacto, EX.Personaje, EX.Equipamiento, "Posee Artefacto", "Relaciona un personaje con su equipamiento."),#
     (EX.esEnemigoDe, EX.Personaje, EX.Personaje, "Es Enemigo De", "Rivalidad combativa entre dos personajes."),
-    (EX.esArchienemigoDe, EX.Personaje, EX.Personaje, "Es Archienemigo De", "Subpropiedad para archirrivalidad histórica."),#
     (EX.usaIdentidadOculta, EX.Personaje, XSD.boolean, "Usa Identidad Oculta", "Indica si oculta su cara/identidad."),
     (EX.valorPopularidad, EX.Personaje, XSD.integer, "Valor Popularidad", "Métrica de 0 a 100 para lógica difusa."),
     (EX.valorAmenaza, EX.Personaje, XSD.integer, "Valor Amenaza", "Métrica de 0 a 10 para lógica difusa."),
     (EX.valorPoder, EX.Personaje, XSD.integer, "Valor Poder", "Métrica de 0 a 100 para lógica difusa.")
 ]
 
-# Se recorre la lista de tuplas y se añaden al grafo
+subprops=[
+    (EX.esArchienemigoDe,  "Es Archienemigo De", "Subpropiedad para archirrivalidad histórica."),
+    (EX.poseeArmaMitica,  "Posee Arma Mítica", "Subpropiedad para armas divinas/míticas.")
+
+]
+for subprop_uri , label, desc in subprops:
+    g.add((subprop_uri, RDF.type, RDF.Property))
+    g.add((subprop_uri, RDFS.label, Literal(label) ))
+    g.add((subprop_uri, DCTERMS.description, Literal(desc)))
+
+
 for propiedad_uri, domain_uri, range_uri, label, desc in props:
     g.add((propiedad_uri, RDF.type, RDF.Property))
     g.add((propiedad_uri, RDFS.domain, domain_uri))
@@ -162,7 +170,7 @@ g.add((EX.Thor, EX.valorPoder, Literal(77, datatype=XSD.integer)))
 g.add((EX.SilverSurfer, RDF.type, EX.HeroeMarvel))
 g.add((EX.SilverSurfer, RDF.type, EX.Alienigena))
 g.add((EX.SilverSurfer, FOAF.name, Literal("Norrin Radd", datatype=XSD.string)))
-g.add((EX.SilverSurfer, EX.poseeArtefacto, EX.TablaCosmica))
+g.add((EX.SilverSurfer, EX.poseeArmaMitica, EX.TablaCosmica))
 g.add((EX.SilverSurfer, EX.tienePoder, EX.PoderCosmico))
 g.add((EX.SilverSurfer, EX.usaIdentidadOculta, Literal(True, datatype=XSD.boolean)))
 g.add((EX.SilverSurfer, EX.valorPopularidad, Literal(37, datatype=XSD.integer)))
@@ -218,7 +226,7 @@ g.add((EX.Superman, EX.valorPoder, Literal(98, datatype=XSD.integer)))
 g.add((EX.WonderWoman, RDF.type, EX.HeroeDC))
 g.add((EX.WonderWoman, RDF.type, EX.HumanoMutado))
 g.add((EX.WonderWoman, FOAF.name, Literal("Diana Prince", datatype=XSD.string)))
-g.add((EX.WonderWoman, EX.poseeArtefacto, EX.LazoDeLaVerdad))
+g.add((EX.WonderWoman, EX.poseeArmaMitica, EX.LazoDeLaVerdad))
 g.add((EX.WonderWoman, EX.tienePoder, EX.FuerzaDivina))
 g.add((EX.WonderWoman, EX.usaIdentidadOculta, Literal(False, datatype=XSD.boolean)))
 g.add((EX.WonderWoman, EX.valorPopularidad, Literal(89, datatype=XSD.integer)))
@@ -263,7 +271,7 @@ g.add((EX.Venom, EX.valorPoder, Literal(74, datatype=XSD.integer)))
 g.add((EX.Thanos, RDF.type, EX.VillanoMarvel))
 g.add((EX.Thanos, RDF.type, EX.Alienigena))
 g.add((EX.Thanos, FOAF.name, Literal("Thanos", datatype=XSD.string)))
-g.add((EX.Thanos, EX.poseeArtefacto, EX.Guantelete))
+g.add((EX.Thanos, EX.poseeArmaMitica, EX.Guantelete))
 g.add((EX.Thanos, EX.tienePoder, EX.FuerzaSobrehumana))
 g.add((EX.Thanos, EX.usaIdentidadOculta, Literal(False, datatype=XSD.boolean)))
 g.add((EX.Thanos, EX.valorPopularidad, Literal(89, datatype=XSD.integer)))
@@ -379,7 +387,7 @@ hechos_ejemplo = [
     ("ex:Superman", "rdf:type", "ex:Personaje", "Inferido por subclase ex:Alienigena"),
     ("ex:Thanos", "rdf:type", "ex:Personaje", "Inferido por subclase ex:VillanoMarvel"),
     ("ex:IronMan", "rdf:type", "ex:Humano", "Inferido por subclase ex:HumanoTecnologico"),
-    ("ex:Flash", "rdf:type", "ex:Humano", "Inferido por subclase ex:HumanoMutado")
+    ("ex:Guantelete", "rdf:type", "ex:Equipamiento", "Inferido por subpropiedad ex:poseeArmaM   itica")
 ]
 
 for idx, (s, p, o, razon) in enumerate(hechos_ejemplo, start=1):
@@ -422,7 +430,7 @@ for s,p,o in g.triples((None,RDF.type,RDFS.Class)):
 for s,p,o in g.triples((None,RDF.type,RDF.Property)) :
     s_literal=n_local(s)
     
-    if "#" not in s_literal and ("dc/" not in s):
+    if "#" not in s_literal and ('/dc' not in s):
         propiedad.add(s_literal)
 
 print(propiedad)
@@ -476,14 +484,23 @@ preguntas_akinator=["¿Tú personaje es archienemigo de algún personaje de la l
                     "Tú personaje usa identidad oculta?"] 
 
 clases_dic= {}
-
+propiedades_dic={}
 for elemento in clase.union(propiedad):
     if elemento == 'Personaje': continue
     elemento_comparacion = elemento.lower()
     for pregunta in preguntas_akinator:
         pregunta_comparacion = normalize(pregunta)
         if elemento_comparacion in pregunta_comparacion:
-            clases_dic[elemento] = {"uri":elemento, "pregunta":pregunta}
+            
+            if elemento in clase :clases_dic[elemento] = {"uri":elemento, "pregunta":pregunta}
+            else: propiedades_dic[elemento]={"uri":elemento, "pregunta":pregunta}
+
+print("clases_dic")
 for i, j in clases_dic.items():
     print(f'{i}: \n {j} \n' )
+
+print("clases_dic")
+for i, j in propiedades_dic.items():
+    print(f'{i}: \n {j} \n' )
+    
     
