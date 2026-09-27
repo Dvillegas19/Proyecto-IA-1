@@ -88,7 +88,7 @@ g.add((EX.poseeArmaMitica, RDFS.subPropertyOf, EX.poseeArtefacto))
 g.add((EX.esArchienemigoDe, RDFS.subPropertyOf, EX.esEnemigoDe))
 
 
-# INSTANCIACIÓN DE PODERES (10)
+# INSTANCIACIÓN DE PODERES (13)
 g.add((EX.SentidoAracnido, RDF.type, EX.SuperPoder))
 g.add((EX.FuerzaMejorada, RDF.type, EX.SuperPoder))
 g.add((EX.ControlTrueno, RDF.type, EX.SuperPoder))
@@ -99,16 +99,32 @@ g.add((EX.FuerzaSobrehumana, RDF.type, EX.SuperPoder))
 g.add((EX.FuerzaDivina, RDF.type, EX.SuperPoder))
 g.add((EX.Simbionte, RDF.type, EX.SuperPoder))
 g.add((EX.RayosOmega, RDF.type, EX.SuperPoder))
+g.add((EX.ComunicacionMarina, RDF.type, EX.SuperPoder))
+g.add((EX.Hechiceria, RDF.type, EX.SuperPoder))
+g.add((EX.FactorCurativo, RDF.type, EX.SuperPoder))
 
-# EQUIPAMIENTOS (10 instancias de equipamiento - La 11 (LazoDeLaVerdad)
+
+# EQUIPAMIENTOS (14 instancias de equipamiento - La 15 (LazoDeLaVerdad)
 # se declarará por inferencia de caso 2 con el rango de posee artefacto)
 equipamientos = [EX.ArmaduraTech, EX.ArcoGadgets, EX.EscudoVibranium, EX.Mjolnir, EX.TablaCosmica,
-        EX.Batarang, EX.PlaneadorBombas, EX.TrajeAlasTech, EX.Guantelete, EX.ToxinaRisa, EX.Acertijos]
+        EX.Batarang, EX.PlaneadorBombas, EX.TrajeAlasTech, EX.Guantelete, EX.ToxinaRisa, EX.Acertijos, EX.TrajeKryptonita,
+        EX.ArmaduraMisticotech, EX.TridenteDeNeptuno, EX.GarrasAdamantium]
 for equipamiento in equipamientos:
     g.add((equipamiento, RDF.type, EX.Equipamiento))
 
-# PERSONAJES (19)
-# MARVEL HEROES (6)
+# PERSONAJES (26)
+# MARVEL HEROES (7)
+# Wolverine
+g.add((EX.Wolverine, RDF.type, EX.HeroeMarvel))
+g.add((EX.Wolverine, RDF.type, EX.HumanoMutado))
+g.add((EX.Wolverine, FOAF.name, Literal("Logan", datatype=XSD.string)))
+g.add((EX.Wolverine, EX.poseeArtefacto, EX.GarrasAdamantium))
+g.add((EX.Wolverine, EX.tienePoder, EX.FactorCurativo))
+g.add((EX.Wolverine, EX.usaIdentidadOculta, Literal(True, datatype=XSD.boolean)))
+g.add((EX.Wolverine, EX.valorPopularidad, Literal(80, datatype=XSD.integer)))
+g.add((EX.Wolverine, EX.valorAmenaza, Literal(6, datatype=XSD.integer)))
+g.add((EX.Wolverine, EX.valorPoder, Literal(65, datatype=XSD.integer)))
+
 # Iron Man
 g.add((EX.IronMan, RDF.type, EX.HeroeMarvel))
 g.add((EX.IronMan, RDF.type, EX.HumanoTecnologico))
@@ -147,7 +163,7 @@ g.add((EX.CapitanAmerica, FOAF.name, Literal("Steve Rogers", datatype=XSD.string
 g.add((EX.CapitanAmerica, EX.poseeArtefacto, EX.EscudoVibranium))
 g.add((EX.CapitanAmerica, EX.tienePoder, EX.FuerzaMejorada))
 g.add((EX.CapitanAmerica, EX.usaIdentidadOculta, Literal(False, datatype=XSD.boolean)))
-g.add((EX.CapitanAmerica, EX.valorPopularidad, Literal(91, datatype=XSD.integer)))
+g.add((EX.CapitanAmerica, EX.valorPopularidad, Literal(97, datatype=XSD.integer)))
 g.add((EX.CapitanAmerica, EX.valorAmenaza, Literal(4, datatype=XSD.integer)))
 g.add((EX.CapitanAmerica, EX.valorPoder, Literal(48, datatype=XSD.integer)))
 
@@ -175,7 +191,17 @@ g.add((EX.SilverSurfer, EX.valorAmenaza, Literal(9, datatype=XSD.integer)))
 g.add((EX.SilverSurfer, EX.valorPoder, Literal(95, datatype=XSD.integer)))
 
 
-# DC HEROES (5)
+# DC HEROES (7)
+# Supergirl
+g.add((EX.Supergirl, RDF.type, EX.HeroeDC))
+g.add((EX.Supergirl, RDF.type, EX.Alienigena))
+g.add((EX.Supergirl, FOAF.name, Literal("Kara Zor-El", datatype=XSD.string)))
+g.add((EX.Supergirl, EX.tienePoder, EX.Vuelo))
+g.add((EX.Supergirl, EX.usaIdentidadOculta, Literal(True, datatype=XSD.boolean)))
+g.add((EX.Supergirl, EX.valorPopularidad, Literal(50, datatype=XSD.integer)))
+g.add((EX.Supergirl, EX.valorAmenaza, Literal(7, datatype=XSD.integer)))
+g.add((EX.Supergirl, EX.valorPoder, Literal(90, datatype=XSD.integer)))
+
 # Batman
 g.add((EX.Batman, RDF.type, EX.HeroeDC))
 g.add((EX.Batman, RDF.type, EX.HumanoTecnologico))
@@ -212,6 +238,7 @@ g.add((EX.Flash, EX.valorPoder, Literal(85, datatype=XSD.integer)))
 g.add((EX.Superman, RDF.type, EX.HeroeDC))
 g.add((EX.Superman, RDF.type, EX.Alienigena))
 g.add((EX.Superman, FOAF.name, Literal("Clark Kent", datatype=XSD.string)))
+g.add((EX.Superman, EX.esArchienemigoDe, EX.LexLuthor))
 g.add((EX.Superman, EX.tienePoder, EX.Vuelo))
 g.add((EX.Superman, EX.tienePoder, EX.FuerzaSobrehumana))
 g.add((EX.Superman, EX.usaIdentidadOculta, Literal(True, datatype=XSD.boolean)))
@@ -230,8 +257,29 @@ g.add((EX.WonderWoman, EX.valorPopularidad, Literal(89, datatype=XSD.integer)))
 g.add((EX.WonderWoman, EX.valorAmenaza, Literal(5, datatype=XSD.integer)))
 g.add((EX.WonderWoman, EX.valorPoder, Literal(60, datatype=XSD.integer)))
 
+# Aquaman
+g.add((EX.Aquaman, RDF.type, EX.HeroeDC))
+g.add((EX.Aquaman, RDF.type, EX.HumanoMutado))
+g.add((EX.Aquaman, FOAF.name, Literal("Arthur Curry", datatype=XSD.string)))
+g.add((EX.Aquaman, EX.poseeArmaMitica, EX.TridenteDeNeptuno))
+g.add((EX.Aquaman, EX.tienePoder, EX.ComunicacionMarina))
+g.add((EX.Aquaman, EX.usaIdentidadOculta, Literal(False, datatype=XSD.boolean)))
+g.add((EX.Aquaman, EX.valorPopularidad, Literal(50, datatype=XSD.integer)))
+g.add((EX.Aquaman, EX.valorAmenaza, Literal(6, datatype=XSD.integer)))
+g.add((EX.Aquaman, EX.valorPoder, Literal(65, datatype=XSD.integer)))
 
-# MARVEL VILLAINS (4)
+
+# MARVEL VILLAINS (6)
+# Carnage
+g.add((EX.Carnage, RDF.type, EX.VillanoMarvel))
+g.add((EX.Carnage, RDF.type, EX.HumanoMutado))
+g.add((EX.Carnage, FOAF.name, Literal("Cletus Kasady", datatype=XSD.string)))
+g.add((EX.Carnage, EX.tienePoder, EX.Simbionte))
+g.add((EX.Carnage, EX.usaIdentidadOculta, Literal(True, datatype=XSD.boolean)))
+g.add((EX.Carnage, EX.valorPopularidad, Literal(50, datatype=XSD.integer)))
+g.add((EX.Carnage, EX.valorAmenaza, Literal(5, datatype=XSD.integer)))
+g.add((EX.Carnage, EX.valorPoder, Literal(68, datatype=XSD.integer)))
+
 # Green Goblin
 g.add((EX.GreenGoblin, RDF.type, EX.VillanoMarvel))
 g.add((EX.GreenGoblin, RDF.type, EX.HumanoTecnologico))
@@ -275,8 +323,28 @@ g.add((EX.Thanos, EX.valorPopularidad, Literal(89, datatype=XSD.integer)))
 g.add((EX.Thanos, EX.valorAmenaza, Literal(10, datatype=XSD.integer)))
 g.add((EX.Thanos, EX.valorPoder, Literal(96, datatype=XSD.integer)))
 
+# Doctor Doom
+g.add((EX.DoctorDoom, RDF.type, EX.VillanoMarvel))
+g.add((EX.DoctorDoom, RDF.type, EX.HumanoTecnologico))
+g.add((EX.DoctorDoom, FOAF.name, Literal("Victor von Doom", datatype=XSD.string)))
+g.add((EX.DoctorDoom, EX.poseeArtefacto, EX.ArmaduraMisticotech))
+g.add((EX.DoctorDoom, EX.tienePoder, EX.Hechiceria))
+g.add((EX.DoctorDoom, EX.usaIdentidadOculta, Literal(False, datatype=XSD.boolean)))
+g.add((EX.DoctorDoom, EX.valorPopularidad, Literal(90, datatype=XSD.integer)))
+g.add((EX.DoctorDoom, EX.valorAmenaza, Literal(9, datatype=XSD.integer)))
+g.add((EX.DoctorDoom, EX.valorPoder, Literal(90, datatype=XSD.integer)))
 
-# DC VILLAINS (4)
+# DC VILLAINS (6)
+# General Zod
+g.add((EX.GeneralZod, RDF.type, EX.VillanoDC))
+g.add((EX.GeneralZod, RDF.type, EX.Alienigena))
+g.add((EX.GeneralZod, FOAF.name, Literal("Dru-Zod", datatype=XSD.string)))
+g.add((EX.GeneralZod, EX.tienePoder, EX.Vuelo))
+g.add((EX.GeneralZod, EX.usaIdentidadOculta, Literal(False, datatype=XSD.boolean)))
+g.add((EX.GeneralZod, EX.valorPopularidad, Literal(80, datatype=XSD.integer)))
+g.add((EX.GeneralZod, EX.valorAmenaza, Literal(7, datatype=XSD.integer)))
+g.add((EX.GeneralZod, EX.valorPoder, Literal(70, datatype=XSD.integer)))
+
 # Joker
 g.add((EX.Joker, RDF.type, EX.VillanoDC))
 g.add((EX.Joker, RDF.type, EX.HumanoTecnologico))
@@ -319,6 +387,18 @@ g.add((EX.Darkseid, EX.usaIdentidadOculta, Literal(False, datatype=XSD.boolean))
 g.add((EX.Darkseid, EX.valorPopularidad, Literal(63, datatype=XSD.integer)))
 g.add((EX.Darkseid, EX.valorAmenaza, Literal(10, datatype=XSD.integer)))
 g.add((EX.Darkseid, EX.valorPoder, Literal(100, datatype=XSD.integer)))
+
+# Lex Luthor
+g.add((EX.LexLuthor, RDF.type, EX.VillanoDC))
+g.add((EX.LexLuthor, RDF.type, EX.HumanoTecnologico))
+g.add((EX.LexLuthor, FOAF.name, Literal("Lex Luthor", datatype=XSD.string)))
+g.add((EX.LexLuthor, EX.esArchienemigoDe, EX.Superman))
+g.add((EX.LexLuthor, EX.poseeArtefacto, EX.TrajeKryptonita))
+g.add((EX.LexLuthor, EX.usaIdentidadOculta, Literal(False, datatype=XSD.boolean)))
+g.add((EX.LexLuthor, EX.valorPopularidad, Literal(89, datatype=XSD.integer)))
+g.add((EX.LexLuthor, EX.valorAmenaza, Literal(5, datatype=XSD.integer)))
+g.add((EX.LexLuthor, EX.valorPoder, Literal(63, datatype=XSD.integer)))
+
 tripletas_antes = len(g)
 print(f"Total de tripletas explícitas ingresadas: {tripletas_antes}\n")
 
@@ -348,7 +428,6 @@ print("Aplicando el motor de inferencia (DeductiveClosure - RDFS_Semantics)")
 DeductiveClosure(RDFS_Semantics).expand(g)
 tripletas_despues = len(g)
 
-"""""""""
 print(f"Tripletas antes del razonamiento:  {tripletas_antes}")
 print(f"Tripletas después del razonamiento: {tripletas_despues}")
 print(f"Nuevas afirmaciones inferidas: {tripletas_despues - tripletas_antes}\n")
@@ -391,114 +470,9 @@ for idx, (s, p, o, razon) in enumerate(hechos_ejemplo, start=1):
     print(f"Hecho Inferido {idx}: ({s} {p} {o})")
     print(f"Justificación: {razon}\n")
 
-"""
+
 # Serialización en Turtle
 archivo_ontologia = "ontologia_generada.ttl"
 g.serialize(destination=archivo_ontologia, format="turtle")
 print(f"Ontología serializada correctamente en '{archivo_ontologia}'")
 print("Ir al final de documento para ver donde quedo guardado en tu drive")
-
-
-def n_local(uri):
-    return uri.split("/")[-1]
-
-def normalize(s):
-    s = s.replace(" ", "").lower()
-    replacements = (
-        ("á", "a"),
-        ("é", "e"),
-        ("í", "i"),
-        ("ó", "o"),
-        ("ú", "u"),
-    )
-    for a, b in replacements:
-        s = s.replace(a, b)
-    
-    return s
-
-clase=set()
-propiedad=set()
-
-
-for s,p,o in g.triples((None,RDF.type,RDFS.Class)):
-    clase.add(n_local(s))
-
-
-for s,p,o in g.triples((None,RDF.type,RDF.Property)) :
-    s_literal=n_local(s)
-    
-    if "#" not in s_literal and ('/dc' not in s):
-        propiedad.add(s_literal)
-
-
-dict_personajes={}
-for s,p,o in g.triples((None,RDF.type,EX.Personaje)):
-    s_literal=n_local(s)
-    if s_literal not in dict_personajes:
-        dict_personajes[s_literal]={"uri": s_literal}
-
-        for su,pe,ob in g.triples((s, None, None)):
-            pe_literal=n_local(pe)
-            ob_literal=n_local(ob)
-
-            if pe_literal in clase.union(propiedad) or ob_literal in clase.union(propiedad):
-                
-                if isinstance(ob, Literal) and ob.datatype == XSD.integer:
-                    dict_personajes[s_literal][pe_literal]= int(ob_literal)
-
-                elif pe == FOAF.name:
-                    dict_personajes[s_literal][pe_literal]=ob
-
-                elif isinstance(ob, Literal) and ob.datatype == XSD.boolean:
-                    dict_personajes[s_literal][pe_literal]=ob
-
-                elif pe==RDF.type :dict_personajes[s_literal][ob_literal]= True 
-                
-                else: dict_personajes[s_literal][pe_literal]= True 
-
-               
-        for i in clase.union(propiedad):
-            if str(i) not in dict_personajes[s_literal]:
-                dict_personajes[s_literal][i] = False
-
-
-
-#ASIGNAR PREGUNTAS A CLASES/PROPIEDADES
-preguntas_akinator=["¿Tú personaje es archienemigo de algún personaje de la lista? (Enemigo recurrente en series/películas)",
-                    "¿Tú personaje es un villano Marvel?",
-                    "¿Tú personaje es un villano DC?",
-                    "¿Tú personaje es un humano Mutado? (Nació humano, pero adquirió poderes)",
-                    "¿Tu personaje es un Superhéroe?",
-                    "¿Tu personaje es un Supervillano?",
-                    "¿Es un Héroe Marvel?",
-                    "¿Es un Héroe DC?",
-                    "¿Tu personaje es de especie Humana?",
-                    "¿Es un humano tecnológico?  (Usa la tecnología a su favor)",
-                    "¿Tu personaje es Alienígena? (No nació en la Tierra)",
-                    "¿Tiene poder alguno? (Superfuerza, Supervelocidad, etc..)",
-                    "¿Posee artefacto o equipo alguno (traje, arco, martillo, lazo, etc..)?",
-                    "Tú personaje usa identidad oculta?"] 
-
-clases_dic= {}
-propiedades_dic={}
-for elemento in clase.union(propiedad):
-    if elemento == 'Personaje': continue
-    elemento_comparacion = elemento.lower()
-    for pregunta in preguntas_akinator:
-        pregunta_comparacion = normalize(pregunta)
-        if elemento_comparacion in pregunta_comparacion:
-            
-            if elemento in clase :clases_dic[elemento] = {"uri":elemento, "pregunta":pregunta}
-            else: propiedades_dic[elemento]={"uri":elemento, "pregunta":pregunta}
-
-for s,p,o in g :
-    print(s,p,o)
-
-print("clases_dic")
-for i, j in clases_dic.items():
-    print(f'{i}: \n {j} \n' )
-
-print("clases_dic")
-for i, j in propiedades_dic.items():
-    print(f'{i}: \n {j} \n' )
-    
