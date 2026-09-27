@@ -65,6 +65,13 @@ props = [
     (EX.valorPoder, EX.Personaje, XSD.integer, "Valor Poder", "Métrica de 0 a 100 para lógica difusa.")
 ]
 
+for propiedad_uri, domain_uri, range_uri, label, desc in props:
+    g.add((propiedad_uri, RDF.type, RDF.Property))
+    g.add((propiedad_uri, RDFS.domain, domain_uri))
+    g.add((propiedad_uri, RDFS.range, range_uri))
+    g.add((propiedad_uri, RDFS.label, Literal(label)))
+    g.add((propiedad_uri, DCTERMS.description, Literal(desc)))
+
 subprops=[
     (EX.esArchienemigoDe,  "Es Archienemigo De", "Subpropiedad para archirrivalidad histórica."),
     (EX.poseeArmaMitica,  "Posee Arma Mítica", "Subpropiedad para armas divinas/míticas.")
@@ -74,16 +81,6 @@ for subprop_uri , label, desc in subprops:
     g.add((subprop_uri, RDF.type, RDF.Property))
     g.add((subprop_uri, RDFS.label, Literal(label) ))
     g.add((subprop_uri, DCTERMS.description, Literal(desc)))
-
-
-for propiedad_uri, domain_uri, range_uri, label, desc in props:
-    g.add((propiedad_uri, RDF.type, RDF.Property))
-    g.add((propiedad_uri, RDFS.domain, domain_uri))
-    g.add((propiedad_uri, RDFS.range, range_uri))
-    g.add((propiedad_uri, RDFS.label, Literal(label)))
-    g.add((propiedad_uri, DCTERMS.description, Literal(desc)))
-
-
 
 # Jerarquía de Propiedades (rdfs:subPropertyOf)
 # Se definen las sub propiedades para cada propiedad
@@ -387,7 +384,7 @@ hechos_ejemplo = [
     ("ex:Superman", "rdf:type", "ex:Personaje", "Inferido por subclase ex:Alienigena"),
     ("ex:Thanos", "rdf:type", "ex:Personaje", "Inferido por subclase ex:VillanoMarvel"),
     ("ex:IronMan", "rdf:type", "ex:Humano", "Inferido por subclase ex:HumanoTecnologico"),
-    ("ex:Guantelete", "rdf:type", "ex:Equipamiento", "Inferido por subpropiedad ex:poseeArmaM   itica")
+    ("ex:Guantelete", "rdf:type", "ex:Equipamiento", "Inferido por subpropiedad ex:poseeArmaMitica")
 ]
 
 for idx, (s, p, o, razon) in enumerate(hechos_ejemplo, start=1):
@@ -433,7 +430,6 @@ for s,p,o in g.triples((None,RDF.type,RDF.Property)) :
     if "#" not in s_literal and ('/dc' not in s):
         propiedad.add(s_literal)
 
-print(propiedad)
 
 dict_personajes={}
 for s,p,o in g.triples((None,RDF.type,EX.Personaje)):
@@ -495,6 +491,9 @@ for elemento in clase.union(propiedad):
             if elemento in clase :clases_dic[elemento] = {"uri":elemento, "pregunta":pregunta}
             else: propiedades_dic[elemento]={"uri":elemento, "pregunta":pregunta}
 
+for s,p,o in g :
+    print(s,p,o)
+
 print("clases_dic")
 for i, j in clases_dic.items():
     print(f'{i}: \n {j} \n' )
@@ -502,5 +501,4 @@ for i, j in clases_dic.items():
 print("clases_dic")
 for i, j in propiedades_dic.items():
     print(f'{i}: \n {j} \n' )
-    
     

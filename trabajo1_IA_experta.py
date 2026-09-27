@@ -1,44 +1,126 @@
 from experta import *
-from rdflib import Graph, URIRef, Namespace
-from rdflib.namespace import RDF
+from rdflib import Graph, URIRef, Namespace, Literal
+from rdflib.namespace import RDF, RDFS, XSD, FOAF, DCTERMS
 import random
 import re
+
 
 # Traducción de la ontología para traer los datos al sistema experto
 g = Graph()
 g.parse("ontologia_generada.ttl", format="turtle")
 EX = Namespace("http://ejemplo.org/superheroes/")
 
-# La función extraer_nombre toma un uri completo, a traves de un regex 
-# y la función split toma el nombre local y lo retorna 
-def extraer_nombre(uri_o_literal):
-    if isinstance(uri_o_literal, URIRef):
-        return re.split(r'[/#]', str(uri_o_literal))[-1]
-    return str(uri_o_literal)
+# La función n_local toma un uri completo, a través de 
+# la función split toma el nombre local y lo retorna 
+def n_local(uri):
+    return uri.split("/")[-1]
+
+# Esta función toma un string le quita las tildes y le quita los espacios en blanco remplazandolos con una cadena vacia
+def normalize(s):
+    s = s.replace(" ", "").lower()
+    replacements = (
+        ("á", "a"),
+        ("é", "e"),
+        ("í", "i"),
+        ("ó", "o"),
+        ("ú", "u"),
+    )
+    for a, b in replacements:
+        s = s.replace(a, b)
+    
+    return s
 
 clase=set()
 propiedad=set()
+
+# Agregamos los nombres de las clases y propiedades a sus sets respectivos 
 for s,p,o in g.triples((None,RDF.type,RDFS.Class)):
-    clase.add(s.split("/")[-1])
-
-
+    clase.add(n_local(s))
 
 for s,p,o in g.triples((None,RDF.type,RDF.Property)) :
-    s_literal=s.split("/")[-1]
-    print(s)
-    if "#" not in s_literal and ("dc/" not in s):
+    s_literal=n_local(s)
+    
+    if "#" not in s_literal and ('/dc' not in s):
         propiedad.add(s_literal)
 
 
+dict_personajes={}
+# Este es el traductor de la ontología. 
+# El primer ciclo for nos sirve para sacar los nombres de los personajes.
+# El segundo ciclo for toma el uri del recurso y evalua las tripletas que tengan como sujeto al personajes obtenido en el primer ciclo for 
+# 
+# Ejm:
+# Del primer for se obtiene el uri http://ejemplo.org/superheroes/SpiderMan, luego lee "SpiderMan" y si no se encuentra en dict_personajes, 
+# lo agrega con un value que es un diccionario de la forma {'uri':'SpiderMan'}.
 
+# El segundo for evalúa las tripletas que tengan sujeto http://ejemplo.org/superheroes/SpiderMan.
 
+# Luego, el código evalúa que su predicado u objeto se encuentren en los sets propiedad y clase respectivamente (Como queremos obtener las clases y las propiedades de ese sujeto, es necesario
+# mirar el predicado para una tripleta de propiedad y el objeto para una tripleta de clase).
+# Posteriormente evalúa las restricciones y agrega esa propiedad o clase al diccionario de ese 
+# personaje con value True si se encuentra asociado a este. ej. {Spiderman:{"uri":Spiderman, "name":Peter Parker, "tienePoder":True}}.
+#Adicionalmente, las únicas clases/propiedades que sí guardan su instancia como value en el diccionario del personaje son: FOAF.name, EX.usaIdentidadOculta (qué también es boolean),
+#EX.valorPopularidad, EX.valorAmenaza y EX.valorPoder.
+# Por último, si el personaje no tiene alguna de las propiedades/clases, estas se instanciarán en el diccionario con un value Boolean(False)
 
-# Diccionario donde estarán guardados los personajes con keys igual a sus atributos y propiedades, ambas previamentes definidas en la ontología. 
-# Así como values con valores booleanos que validarán si poseen o no esta característica 
-personajes_dict = {}
-# Lista para imprimirle los personajes al usuario que quiera jugar Akinator
-# con los personajes disponibles
-nombre_personajes=[]
+for s,p,o in g.triples((None,RDF.type,EX.Personaje)):
+    s_literal=n_local(s)
+    if s_literal not in dict_personajes:
+        dict_personajes[s_literal]={"uri": s_literal}
+
+        for su,pe,ob in g.triples((s, None, None)):
+            pe_literal=n_local(pe)
+            ob_literal=n_local(ob)
+
+            if pe_literal in clase.union(propiedad) or ob_literal in clase.union(propiedad):
+                
+                if isinstance(ob, Literal) and ob.datatype == XSD.integer:
+                    dict_personajes[s_literal][pe_literal]= int(ob_literal)
+
+                elif pe == FOAF.name:
+                    dict_personajes[s_literal][pe_literal]=ob
+
+                elif isinstance(ob, Literal) and ob.datatype == XSD.boolean:
+                    dict_personajes[s_literal][pe_literal]=ob
+
+                elif pe==RDF.type :dict_personajes[s_literal][ob_literal]= True 
+                
+                else: dict_personajes[s_literal][pe_literal]= True 
+
+               
+        for i in clase.union(propiedad):
+            if str(i) not in dict_personajes[s_literal]:
+                dict_personajes[s_literal][i] = False
+
+# Aqui se tienen todas las preguntas posibles que el sistema de adivinanza puede hacer al usuario
+preguntas_akinator=["¿Tú personaje es archienemigo de algún personaje de la lista? (Enemigo recurrente en series/películas)",
+                    "¿Tú personaje es un villano Marvel?",
+                    "¿Tú personaje es un villano DC?",
+                    "¿Tú personaje es un humano Mutado? (Nació humano, pero adquirió poderes)",
+                    "¿Tu personaje es un Superhéroe?",
+                    "¿Tu personaje es un Supervillano?",
+                    "¿Es un Héroe Marvel?",
+                    "¿Es un Héroe DC?",
+                    "¿Tu personaje es de especie Humana?",
+                    "¿Es un humano tecnológico?  (Usa la tecnología a su favor)",
+                    "¿Tu personaje es Alienígena? (No nació en la Tierra)",
+                    "¿Tiene poder alguno? (Superfuerza, Supervelocidad, etc..)",
+                    "¿Posee artefacto o equipo alguno (traje, arco, martillo, lazo, etc..)?",
+                    "Tú personaje usa identidad oculta?"] 
+
+clases_dic= {}
+propiedades_dic={}
+
+# Este ciclo for recorre la union de ambos sets y asocia las propiedades/clase a su pregunta correspondiente 
+for elemento in clase.union(propiedad):
+    if elemento == 'Personaje': continue
+    elemento_comparacion = elemento.lower()
+    for pregunta in preguntas_akinator:
+        pregunta_comparacion = normalize(pregunta)
+        if elemento_comparacion in pregunta_comparacion:
+            
+            if elemento in clase :clases_dic[elemento] = {"uri":elemento, "pregunta":pregunta}
+            else: propiedades_dic[elemento]={"uri":elemento, "pregunta":pregunta}
 
 
 
@@ -89,15 +171,15 @@ class Akinator(KnowledgeEngine):
     @Rule(EstadoJuego(fase="descarte"),
         NOT(AtributoEvaluado(nombre=MATCH.attr)), #no-loop
         OR(
-            Clase(clase=MATCH.attr, pregunta=MATCH.p1), Propiedad(prop=MATCH.attr, pregunta=MATCH.p1)
+            Clase(uri=MATCH.attr, pregunta=MATCH.p), Propiedad(uri=MATCH.attr, pregunta=MATCH.p)
             ),
             salience=5) 
-    
-    def registrar_historial(self, attr, p1)
-        respuesta=input(p1,"si o no")
-        self.declare(Respuesta(atributo=c,valor=respuesta))
+    def descarte_preguntas(self, attr, p):
+        print(p)
+        respuesta=input("Sí (1) o No (0): ")
+        self.declare(Respuesta(atributo=attr, valor=bool(int(respuesta))))
 
-        print(dicts[p])
+        
 
     
     @Rule(EstadoJuego(fase="desempate"), PerfilDifuso(poder=MATCH.p, amenaza=MATCH.a))
@@ -105,89 +187,167 @@ class Akinator(KnowledgeEngine):
         print(f"\nSe detectó un empate. Aplicando perfil difuso para desempatar a los candidatos")
 
 
-    @Rule(AS.r << Respuesta(atributo=MATCH.r), salience=7)
+    @Rule(AS.r << Respuesta(atributo=MATCH.attr), salience=7)
     def eliminiar_respuesta(self,r):
         self.retract(r)
         candidatos_restantes = [fact for fact in self.facts.values() if isinstance(fact, Personaje)]
+        print(len(candidatos_restantes))
         if len(candidatos_restantes) <= 2:
             self.declare(EstadoJuego(fase="final", candidatos=candidatos_restantes))
-        
-    @Rule(EstadoJuego(fase="final", candidatos=MATCH.candidatos_restantes)
-          NOT(EstadoJuego(fase="desempate")))#no-loop
-    def decision_final(self,candidatos_restantes):
-        if len(candidatos_restantes) == 1:
-            cand = candidatos_restantes[0]
-            print(f"\nEl motor determinó que es: {cand['uri'].upper()}")
 
-        elif len(candidatos_restantes) == 0:
-            print("\nNo se encontró un personaje con estos atributos ")
+    # Bloque comentado: lógica final/desempate pendiente.
+    # @Rule(EstadoJuego(fase="final", candidatos=MATCH.candidatos_restantes)
+    #       NOT(EstadoJuego(fase="desempate")))  # no-loop
+    # def decision_final(self, candidatos_restantes):
+    #     if len(candidatos_restantes) == 1:
+    #         cand = candidatos_restantes[0]
+    #         print(f"\nEl motor determinó que es: {cand['uri'].upper()}")
+    #
+    #     elif len(candidatos_restantes) == 0:
+    #         print("\nNo se encontró un personaje con estos atributos ")
+    #
+    #     elif len(candidatos_restantes) == 2:
+    #         print(f"\nQuedan {len(candidatos_restantes)} candidatos. Activando lógica difusa...")
+    #         self.declare(EstadoJuego(fase="desempate", candidatos=candidatos_restantes))
+    #
+    # @Rule(EstadoJuego(fase="desempate", candidatos=MATCH.candidatos_restantes))
+    # def desempate(self):
+    #     pass
 
-        elif len(candidatos_restantes) == 2:
-            print(f"\nQuedan {len(candidatos_restantes)} candidatos. Activando lógica difusa...")
-            self.declare(EstadoJuego(fase="desempate", candidatos= candidatos_restantes))
+    # REGLAS DE DESCARTE (Salience 10 - Se ejecutan antes de limpiar)
 
-    @Rule(EstadoJuego(fase="desempate",candidatos=MATCH.candidatos_restantes))   
-    def desempate(self):
-        pass 
-
-    
-    # REGLAS DE DESCARTE (Salience 10 - Se ejecutan antes de limpiar) 
-    @Rule(AS.r << Respuesta(atributo="esSuperheroe", valor=True), AS.c << Personaje(esSuperheroe=False), salience=10)
-    def desc_no_superheroe(self, c): 
+    @Rule(AS.r << Respuesta(atributo="Superheroe", valor=True), AS.c << Personaje(Superheroe=False), salience=10)
+    def desc_no_superheroe(self, c):
         self.retract(c)
-        self.declare(AtributoEvaluado(nombre="esSuperheroe"))
-        self.declare(AtributoEvaluado(nombre="esVillano"))
+        self.declare(AtributoEvaluado(nombre="Superheroe"))
         self.declare(AtributoEvaluado(nombre="VillanoDC"))
+        self.declare(AtributoEvaluado(nombre="VillanoMarvel"))
+        self.declare(AtributoEvaluado(nombre="SuperVillano"))
 
-    @Rule(Respuesta(atributo="esSuperheroe", valor=False), AS.c << Personaje(esSuperheroe=True), salience=10)
+    @Rule(Respuesta(atributo="Superheroe", valor=False), AS.c << Personaje(Superheroe=True), salience=10)
     def desc_si_superheroe(self, c): 
         self.retract(c)
 
-    @Rule(Respuesta(atributo="esSupervillano", valor=True), AS.c << Personaje(esSupervillano=False), salience=10)
+    @Rule(Respuesta(atributo="Supervillano", valor=True), AS.c << Personaje(Supervillano=False), salience=10)
     def desc_no_supervillano(self, c): 
         self.retract(c)
-    @Rule(Respuesta(atributo="esSupervillano", valor=False), AS.c << Personaje(esSupervillano=True), salience=10)
+        
+        self.declare(AtributoEvaluado(nombre="SuperVillano"))        
+        self.declare(AtributoEvaluado(nombre="Superheroe"))
+        self.declare(AtributoEvaluado(nombre="HeroeMarvel"))
+        self.declare(AtributoEvaluado(nombre="HeroeDC"))
+
+    @Rule(Respuesta(atributo="Supervillano", valor=False), AS.c << Personaje(Supervillano=True), salience=10)
     def desc_si_supervillano(self, c): 
         self.retract(c)
 
-    @Rule(Respuesta(atributo="esHeroeMarvel", valor=True), AS.c << Personaje(esHeroeMarvel=False), salience=10)
+    @Rule(Respuesta(atributo="HeroeMarvel", valor=True), AS.c << Personaje(HeroeMarvel=False), salience=10)
     def desc_no_hm(self, c): 
         self.retract(c)
-    @Rule(Respuesta(atributo="esHeroeMarvel", valor=False), AS.c << Personaje(esHeroeMarvel=True), salience=10)
+        self.declare(AtributoEvaluado(nombre="HeroeMarvel"))
+        self.declare(AtributoEvaluado(nombre="Supervillano"))
+        self.declare(AtributoEvaluado(nombre="VillanoDC"))
+        self.declare(AtributoEvaluado(nombre="VillanoMarvel"))
+        self.declare(AtributoEvaluado(nombre="HeroeDC"))
+        self.declare(AtributoEvaluado(nombre="Superheroe"))
+        
+    @Rule(Respuesta(atributo="HeroeMarvel", valor=False), AS.c << Personaje(HeroeMarvel=True), salience=10)
     def desc_si_hm(self, c): 
         self.retract(c)
 
-    @Rule(Respuesta(atributo="esHeroeDC", valor=True), AS.c << Personaje(esHeroeDC=False), salience=10)
+    @Rule(Respuesta(atributo="HeroeDC", valor=True), AS.c << Personaje(HeroeDC=False), salience=10)
     def desc_no_hdc(self, c): 
         self.retract(c)
-    @Rule(Respuesta(atributo="esHeroeDC", valor=False), AS.c << Personaje(esHeroeDC=True), salience=10)
+        self.declare(AtributoEvaluado(nombre="SuperVillano"))        
+        self.declare(AtributoEvaluado(nombre="Superheroe"))
+        self.declare(AtributoEvaluado(nombre="HeroeMarvel"))
+        self.declare(AtributoEvaluado(nombre="HeroeDC"))
+        self.declare(AtributoEvaluado(nombre="VillanoMarvel"))
+        self.declare(AtributoEvaluado(nombre="VillanoDC"))
+
+    @Rule(Respuesta(atributo="VillanoMarvel", valor=True), AS.c << Personaje(VillanoMarvel=False), salience=10)
+    def desc_no_villanomarvel(self, c): 
+        self.retract(c)
+        self.declare(AtributoEvaluado(nombre="SuperVillano"))        
+        self.declare(AtributoEvaluado(nombre="Superheroe"))
+        self.declare(AtributoEvaluado(nombre="HeroeMarvel"))
+        self.declare(AtributoEvaluado(nombre="HeroeDC"))
+        self.declare(AtributoEvaluado(nombre="VillanoMarvel"))
+        self.declare(AtributoEvaluado(nombre="VillanoDC"))
+
+    @Rule(Respuesta(atributo="VillanoMarvel", valor=False), AS.c << Personaje(VillanoMarvel=True), salience=10)
+    def desc_si_villanomarvel(self, c): 
+        self.retract(c)
+
+    @Rule(Respuesta(atributo="VillanoDC", valor=True), AS.c << Personaje(VillanoDC=False), salience=10)
+    def desc_no_villanodc(self, c): 
+        self.retract(c)
+        self.declare(AtributoEvaluado(nombre="SuperVillano"))        
+        self.declare(AtributoEvaluado(nombre="Superheroe"))
+        self.declare(AtributoEvaluado(nombre="HeroeMarvel"))
+        self.declare(AtributoEvaluado(nombre="HeroeDC"))
+        self.declare(AtributoEvaluado(nombre="VillanoMarvel"))
+        self.declare(AtributoEvaluado(nombre="VillanoDC"))  
+              
+    @Rule(Respuesta(atributo="VillanoDC", valor=False), AS.c << Personaje(VillanoDC=True), salience=10)
+    def desc_si_villanodc(self, c): 
+        self.retract(c)
+
+    @Rule(Respuesta(atributo="HeroeDC", valor=False), AS.c << Personaje(HeroeDC=True), salience=10)
     def desc_si_hdc(self, c): 
         self.retract(c)
 
-    @Rule(Respuesta(atributo="esHumano", valor=True), AS.c << Personaje(esHumano=False), salience=10)
+    @Rule(Respuesta(atributo="Humano", valor=True), AS.c << Personaje(Humano=False), salience=10)
     def desc_no_humano(self, c): 
         self.retract(c)
-    @Rule(Respuesta(atributo="esHumano", valor=False), AS.c << Personaje(esHumano=True), salience=10)
+        self.declare(AtributoEvaluado(nombre="Humano"))
+        self.declare(AtributoEvaluado(nombre="Alienigena"))
+
+    @Rule(Respuesta(atributo="Humano", valor=False), AS.c << Personaje(Humano=True), salience=10)
     def desc_si_humano(self, c): 
         self.retract(c)
+        
 
-    @Rule(Respuesta(atributo="esHumanoTecnologico", valor=True), AS.c << Personaje(esHumanoTecnologico=False), salience=10)
+    @Rule(Respuesta(atributo="HumanoTecnologico", valor=True), AS.c << Personaje(HumanoTecnologico=False), salience=10)
     def desc_no_htec(self, c): 
         self.retract(c)
-    @Rule(Respuesta(atributo="esHumanoTecnologico", valor=False), AS.c << Personaje(esHumanoTecnologico=True), salience=10)
+        self.declare(AtributoEvaluado(nombre="HumanoTecnologico"))
+        self.declare(AtributoEvaluado(nombre="HumanoMutado"))
+        self.declare(AtributoEvaluado(nombre="Alienigena"))
+        self.declare(AtributoEvaluado(nombre="Humano"))
+
+    @Rule(Respuesta(atributo="HumanoTecnologico", valor=False), AS.c << Personaje(HumanoTecnologico=True), salience=10)
     def desc_si_htec(self, c): 
         self.retract(c)
 
-    @Rule(Respuesta(atributo="esAlienigena", valor=True), AS.c << Personaje(esAlienigena=False), salience=10)
-    def desc_no_alien(self, c): 
+    @Rule(Respuesta(atributo="HumanoMutado", valor=True), AS.c << Personaje(HumanoTMutado=False), salience=10)
+    def desc_no_hmut(self, c): 
         self.retract(c)
-    @Rule(Respuesta(atributo="esAlienigena", valor=False), AS.c << Personaje(esAlienigena=True), salience=10)
+        self.declare(AtributoEvaluado(nombre="HumanoTecnologico"))
+        self.declare(AtributoEvaluado(nombre="HumanoMutado"))
+        self.declare(AtributoEvaluado(nombre="Alienigena"))
+        self.declare(AtributoEvaluado(nombre="Humano"))
+
+    @Rule(Respuesta(atributo="HumanoMutado", valor=False), AS.c << Personaje(HumanoMutado=True), salience=10)
+    def desc_si_hmut(self, c): 
+        self.retract(c)
+
+    @Rule(Respuesta(atributo="Alienigena", valor=True), AS.c << Personaje(Alienigena=False), salience=10)
+    def desc_no_alien(self, c):
+        self.retract(c)
+        self.declare(AtributoEvaluado(nombre="Humano"))
+        self.declare(AtributoEvaluado(nombre="HumanoTecnologico"))
+        self.declare(AtributoEvaluado(nombre="VillanoMarvel"))
+        self.declare(AtributoEvaluado(nombre="Alienigena"))
+        
+    @Rule(Respuesta(atributo="Alienigena", valor=False), AS.c << Personaje(Alienigena=True), salience=10)
     def desc_si_alien(self, c): 
         self.retract(c)
 
     @Rule(Respuesta(atributo="tienePoder", valor=True), AS.c << Personaje(tienePoder=False), salience=10)
     def desc_no_poder(self, c): 
         self.retract(c)
+        
     @Rule(Respuesta(atributo="tienePoder", valor=False), AS.c << Personaje(tienePoder=True), salience=10)
     def desc_si_poder(self, c): 
         self.retract(c)
@@ -195,91 +355,50 @@ class Akinator(KnowledgeEngine):
     @Rule(Respuesta(atributo="poseeArtefacto", valor=True), AS.c << Personaje(poseeArtefacto=False), salience=10)
     def desc_no_art(self, c): 
         self.retract(c)
+
     @Rule(Respuesta(atributo="poseeArtefacto", valor=False), AS.c << Personaje(poseeArtefacto=True), salience=10)
     def desc_si_art(self, c): 
         self.retract(c)
 
-    @Rule(Respuesta(atributo="esArchienemigoDe", valor=True), AS.c << Personaje(esArchienemigoDe=False), salience=10)
+    @Rule(Respuesta(atributo="ArchienemigoDe", valor=True), AS.c << Personaje(ArchienemigoDe=False), salience=10)
     def desc_no_archi(self, c): 
         self.retract(c)
-    @Rule(Respuesta(atributo="esArchienemigoDe", valor=False), AS.c << Personaje(esArchienemigoDe=True), salience=10)
+
+    @Rule(Respuesta(atributo="ArchienemigoDe", valor=False), AS.c << Personaje(ArchienemigoDe=True), salience=10)
     def desc_si_archi(self, c): 
         self.retract(c)
 
-    @Rule(Respuesta(atributo="esVillanoMarvel", valor=True), AS.c << Personaje(esVillanoMarvel=False), salience=10)
-    def desc_no_villanomarvel(self, c): 
-        self.retract(c)
-    @Rule(Respuesta(atributo="esVillanoMarvel", valor=False), AS.c << Personaje(esVillanoMarvel=True), salience=10)
-    def desc_si_villanomarvel(self, c): 
+    @Rule(Respuesta(atributo="usaIdentidadOculta", valor=True), AS.c << Personaje(usaIdentidadOculta=False), salience=10)
+    def desc_no_identidad(self, c): 
         self.retract(c)
 
-    @Rule(Respuesta(atributo="esVillanoDC", valor=True), AS.c << Personaje(esVillanoDC=False), salience=10)
-    def desc_no_villanodc(self, c): 
-        self.retract(c)
-    @Rule(Respuesta(atributo="esVillanoDC", valor=False), AS.c << Personaje(esVillanoDC=True), salience=10)
-    def desc_si_villanodc(self, c): 
+    @Rule(Respuesta(atributo="usaIdentidadOculta", valor=False), AS.c << Personaje(usaIdentidadOculta=True), salience=10)
+    def desc_si_identidad(self, c): 
         self.retract(c)
 
 
-# Ciclo de preguntas
+# Se instancia el motor de reglas
 engine = Akinator()
 engine.reset()
+
+# Declaracion de hechos inciales Pesonajes, clases y propiedades 
+hechos_iniciales=[]
+for personaje in dict_personajes.values():
+    hechos_iniciales.append(Personaje(**personaje))
+
+for cla in clases_dic.values() :
+    hechos_iniciales.append(Clase(**cla))
+
+for pro in propiedades_dic.values():
+    hechos_iniciales.append(Propiedad(**pro))
+random.shuffle(hechos_iniciales)
+for hecho in hechos_iniciales:
+    engine.declare(hecho)
+print(len(engine.facts))
 engine.declare(EstadoJuego(fase="descarte"))
-
-for personaje in random.shuffle(personajes_dict.values()):
-    engine.declare(Personaje(**personaje))
-
-
-banco_preguntas = {
-    "esArchienemigoDe" : ["¿Tú personaje tiene algún archienemigo (de los que están en la lista)?", True,[]],
-    "esVillanoMarvel" : ["¿Tú personaje es un villano de Marvel?", True,["esVillanoDC", "esSuperVillano","esHeroeMarvel","esHeroeDC","esSuperHeroe"]],
-    "esVillanoDC" : ["¿Tú personaje es un villano de DC?", True,["esVillanoMarvel","esSuperheroe","esHeroeMarvel","esHeroeDC","esSupervillano"]],
-    "esHumanoMutado" : ["¿Tú personaje es un humano Mutado?", True,["esHumano","esAlienigena","esHumanoTecnologico"]],
-    "esSuperheroe": ["¿Tu personaje es un Superhéroe?", True, ["esSupervillano", "esVillanoMarvel", "esVillanoDC"]],
-    "esSupervillano": ["¿Tu personaje es un Supervillano?", True, ["esSuperheroe", "esHeroeMarvel", "esHeroeDC"]],
-    "esHeroeMarvel": ["¿Es un Héroe de Marvel?", True, ["esHeroeDC", "esVillanoMarvel", "esVillanoDC"]],
-    "esHeroeDC": ["¿Es un Héroe de DC?", True, ["esHeroeMarvel", "esVillanoMarvel", "esVillanoDC"]] ,
-    "esHumano": ["¿Tu personaje es de especie Humana?", True, ["esAlienigena"]],
-    "esHumanoTecnologico": ["¿Es un humano con tecnología?", True, ["esHumanoMutado", "esAlienigena", "esHumano"]],
-    "esAlienigena": ["¿Tu personaje es Alienígena?", True, ["esHumano", "esHumanoTecnologico", "esHumanoMutado"]],
-    "tienePoder": ["¿Posee algún Superpoder (Superfuerza, Supervelocidad, etc..)?", True, []],
-    "poseeArtefacto": ["¿Posee algún artefacto o equipamiento (traje, arco, martillo, lazo, etc..)?", True, []],
-    "usaIdentidadOculta": ["Tú personaje tiene una identidad oculta?", True, []]
-}
-
-keys_preguntas = list(banco_preguntas.keys())
-random.shuffle(keys_preguntas)
-
-candidatos_restantes = []
-
-idx = 1
-print("Elija un personaje para adivinarlo\n")
-for i in nombre_personajes:
-  print(f"{idx}. {i}")
-  idx+=1
-
-for prop in keys_preguntas:
-    if banco_preguntas[prop][1]:
-        print(f"\nPregunta: {banco_preguntas[prop][0]}")
-        respuesta = input("Responde (1 para Sí, 2 para No): ").strip()
-        valor_booleano = (respuesta == "1")
-
-        # Desactivamos preguntas opuestas si la respuesta es Sí
-        if valor_booleano and len(banco_preguntas[prop][2]) > 0:
-            for opuesto in banco_preguntas[prop][2]:
-                if opuesto in banco_preguntas:
-                    banco_preguntas[opuesto][1] = False
-
-        # Declaramos solo la respuesta. La negación en las reglas controlará el ciclo.
-        engine.declare(Respuesta(atributo=prop, valor=valor_booleano))
-        engine.run()
-
-        candidatos_restantes = [fact for fact in engine.facts.values() if isinstance(fact, Personaje)]
-        if len(candidatos_restantes) <= 2:
-            break
-
-
-# Dependiendo de la cantidad de los personajes restantes despues de la ronda de preguntas el sistema tomara distintos caminos:
+engine.run()
+"""
+# Dependiendo de la cantidad de los personajes restantes despues de la ronda de preguntas, el sistema tomara distintos caminos:
 # -Si solo queda un personaje el sistema lo imprimirá en pantalla automáticamente y el juego se dará por terminado 
 # -Si no queda ningún personaje en la lista se imprimirá en pantalla que no pudo adivinar el personaje
 # -Si quedan 2 personajes entrar en fase de desempate utilizando el sistema difuso para desempatar 
@@ -334,3 +453,5 @@ elif len(candidatos_restantes) == 2:
 
     except ValueError:
         print("\nEntrada inválida. Ingresa solo números.")
+"""
+
