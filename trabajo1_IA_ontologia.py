@@ -52,17 +52,18 @@ g.add((EX.HumanoTecnologico, RDFS.subClassOf, EX.Humano))
 g.add((EX.HumanoMutado, RDFS.subClassOf, EX.Humano))
 g.add((EX.Alienigena, RDFS.subClassOf, EX.Personaje))
 
-# DEFINICIÓN DE PROPIEDADES (10 Propiedades: Propiedad - Dominio - Rango - rdfs:label y dcterms:description)
+# DEFINICIÓN DE PROPIEDADES (9 Propiedades: Propiedad - Dominio - Rango - rdfs:label y dcterms:description)
 # Se define una lista de tuplas para cada propiedad con Su NameSpace, dominio, rango, RDFS label y DCTERMS description
 props = [
     (FOAF.name, EX.Personaje, XSD.string, "Nombre Real", "Nombre civil o de identidad real (Vocabulario FOAF)."),
     (EX.tienePoder, EX.Personaje, EX.Superpoder, "Tiene Poder", "Relaciona un personaje con su habilidad innata."),
-    (EX.poseeArtefacto, EX.Personaje, EX.Equipamiento, "Posee Artefacto", "Relaciona un personaje con su equipamiento."),#
+    (EX.poseeArtefacto, EX.Personaje, EX.Equipamiento, "Posee Artefacto", "Relaciona un personaje con su equipamiento."),
     (EX.esEnemigoDe, EX.Personaje, EX.Personaje, "Es Enemigo De", "Rivalidad combativa entre dos personajes."),
     (EX.usaIdentidadOculta, EX.Personaje, XSD.boolean, "Usa Identidad Oculta", "Indica si oculta su cara/identidad."),
     (EX.valorPopularidad, EX.Personaje, XSD.integer, "Valor Popularidad", "Métrica de 0 a 100 para lógica difusa."),
     (EX.valorAmenaza, EX.Personaje, XSD.integer, "Valor Amenaza", "Métrica de 0 a 10 para lógica difusa."),
-    (EX.valorPoder, EX.Personaje, XSD.integer, "Valor Poder", "Métrica de 0 a 100 para lógica difusa.")
+    (EX.valorPoder, EX.Personaje, XSD.integer, "Valor Poder", "Métrica de 0 a 100 para lógica difusa."),
+    (EX.tieneCapa, EX.Personaje, XSD.boolean, "Tiene Capa", "Indica si el personaje viste capa en su traje.")
 ]
 
 for propiedad_uri, domain_uri, range_uri, label, desc in props:
@@ -72,6 +73,7 @@ for propiedad_uri, domain_uri, range_uri, label, desc in props:
     g.add((propiedad_uri, RDFS.label, Literal(label)))
     g.add((propiedad_uri, DCTERMS.description, Literal(desc)))
 
+# 2 subpropiedades
 subprops=[
     (EX.esArchienemigoDe,  "Es Archienemigo De", "Subpropiedad para archirrivalidad histórica."),
     (EX.poseeArmaMitica,  "Posee Arma Mítica", "Subpropiedad para armas divinas/míticas.")
@@ -170,6 +172,7 @@ g.add((EX.CapitanAmerica, EX.valorPoder, Literal(48, datatype=XSD.integer)))
 # Thor
 g.add((EX.Thor, RDF.type, EX.HeroeMarvel))
 g.add((EX.Thor, RDF.type, EX.Alienigena))
+g.add((EX.Thor, EX.tieneCapa, Literal(True, datatype=XSD.boolean)))
 g.add((EX.Thor, FOAF.name, Literal("Thor Odinson", datatype=XSD.string)))
 g.add((EX.Thor, EX.poseeArmaMitica, EX.Mjolnir))
 g.add((EX.Thor, EX.tienePoder, EX.ControlTrueno))
@@ -195,6 +198,7 @@ g.add((EX.SilverSurfer, EX.valorPoder, Literal(95, datatype=XSD.integer)))
 # Supergirl
 g.add((EX.Supergirl, RDF.type, EX.HeroeDC))
 g.add((EX.Supergirl, RDF.type, EX.Alienigena))
+g.add((EX.Supergirl, EX.tieneCapa, Literal(True, datatype=XSD.boolean)))
 g.add((EX.Supergirl, FOAF.name, Literal("Kara Zor-El", datatype=XSD.string)))
 g.add((EX.Supergirl, EX.tienePoder, EX.Vuelo))
 g.add((EX.Supergirl, EX.usaIdentidadOculta, Literal(True, datatype=XSD.boolean)))
@@ -205,6 +209,7 @@ g.add((EX.Supergirl, EX.valorPoder, Literal(90, datatype=XSD.integer)))
 # Batman
 g.add((EX.Batman, RDF.type, EX.HeroeDC))
 g.add((EX.Batman, RDF.type, EX.HumanoTecnologico))
+g.add((EX.Batman, EX.tieneCapa, Literal(True, datatype=XSD.boolean)))
 g.add((EX.Batman, EX.esArchienemigoDe, EX.Joker))
 g.add((EX.Batman, FOAF.name, Literal("Bruce Wayne", datatype=XSD.string)))
 g.add((EX.Batman, EX.poseeArtefacto, EX.Batarang))
@@ -237,6 +242,7 @@ g.add((EX.Flash, EX.valorPoder, Literal(85, datatype=XSD.integer)))
 # Superman
 g.add((EX.Superman, RDF.type, EX.HeroeDC))
 g.add((EX.Superman, RDF.type, EX.Alienigena))
+g.add((EX.Superman, EX.tieneCapa, Literal(True, datatype=XSD.boolean)))
 g.add((EX.Superman, FOAF.name, Literal("Clark Kent", datatype=XSD.string)))
 g.add((EX.Superman, EX.esArchienemigoDe, EX.LexLuthor))
 g.add((EX.Superman, EX.tienePoder, EX.Vuelo))
@@ -326,6 +332,7 @@ g.add((EX.Thanos, EX.valorPoder, Literal(96, datatype=XSD.integer)))
 # Doctor Doom
 g.add((EX.DoctorDoom, RDF.type, EX.VillanoMarvel))
 g.add((EX.DoctorDoom, RDF.type, EX.HumanoTecnologico))
+g.add((EX.DoctorDoom, EX.tieneCapa, Literal(True, datatype=XSD.boolean)))
 g.add((EX.DoctorDoom, FOAF.name, Literal("Victor von Doom", datatype=XSD.string)))
 g.add((EX.DoctorDoom, EX.poseeArtefacto, EX.ArmaduraMisticotech))
 g.add((EX.DoctorDoom, EX.tienePoder, EX.Hechiceria))
@@ -338,6 +345,7 @@ g.add((EX.DoctorDoom, EX.valorPoder, Literal(90, datatype=XSD.integer)))
 # General Zod
 g.add((EX.GeneralZod, RDF.type, EX.VillanoDC))
 g.add((EX.GeneralZod, RDF.type, EX.Alienigena))
+g.add((EX.GeneralZod, EX.tieneCapa, Literal(True, datatype=XSD.boolean)))
 g.add((EX.GeneralZod, FOAF.name, Literal("Dru-Zod", datatype=XSD.string)))
 g.add((EX.GeneralZod, EX.tienePoder, EX.Vuelo))
 g.add((EX.GeneralZod, EX.usaIdentidadOculta, Literal(False, datatype=XSD.boolean)))
